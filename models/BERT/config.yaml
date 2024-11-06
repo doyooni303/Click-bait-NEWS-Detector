@@ -1,0 +1,24 @@
+EXP_NAME: BERT
+
+TOKENIZER:
+    name: bert
+    max_word_len: 512
+
+MODEL:
+    modelname: bert
+    PARAMETERS:
+        pretrained_name: 'skt/kobert-base-v1'
+        num_classes: 2
+    CHECKPOINT:
+        checkpoint_path: /models/BERT/best_model.pt
+
+TRAIN:
+    batch_size: 64
+    num_workers: 12
+
+LOG:
+    log_interval: 10
+
+RESULT:
+    savedir: '/saved_model/Part1'
+    result_name: results
