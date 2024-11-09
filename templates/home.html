@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fake News Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+        h1 {
+            margin: 0;
+            color: #5418d6;
+        }
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .success {
+            background-color: #e6ffe6;
+            border: 1px solid #b3ffb3;
+        }
+        .error {
+            background-color: #ffe6e6;
+            border: 1px solid #ffb3b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/static/logo.png" alt="SNU Logo" class="logo">
+        <!-- <h1>Fake News Detection</h1><br>
+        <h3>by DY</h3></div> -->
+        <div class="title-container">
+            <h1 class="main-title">Fake News Detection</h1>
+            <div class="subtitle">by DY</div>
+        </div>
+    </div>
+    <div class="search-container">
+        <input type="text" id="nameInput" placeholder="Enter URL...">
+        <button onclick="searchPhone()">Detect</button>
+    </div>
+    <div id="result"></div>

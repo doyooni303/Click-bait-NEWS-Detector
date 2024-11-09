@@ -1,2 +1,2 @@
 models/*/*.pt
-*/__pycache__/*
+*/__pycache__/*.pyc
