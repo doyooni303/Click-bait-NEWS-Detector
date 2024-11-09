@@ -9,7 +9,7 @@ class ModelHandler:
 
     def load_model(self):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        print(device)
+        print("device is on {}".format(device))
 
         # tokenizer
         tokenizer, word_embed = create_tokenizer(

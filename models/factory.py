@@ -1,9 +1,6 @@
-from typing import Union
-
-import logging
 import torch
 from kobert_tokenizer import KoBERTTokenizer
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoTokenizer
 
 from .registry import is_model, model_entrypoint
 

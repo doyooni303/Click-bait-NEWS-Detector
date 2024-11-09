@@ -53,10 +53,16 @@ class APIConfig(BaseModel):
 
 
 class DataInput(BaseModel):
-    title: str = Field(..., title="News Title")
-    content: str = Field(..., title="News Content")
+    title: str  # = Field(..., title="News Title")
+    content: str  # = Field(..., title="News Content")
 
 
 class PredictOutput(BaseModel):
-    prob: float
+    prob: str
     prediction: str
+    title: str
+    content: str
+    date: str
+    reporter: str
+    email: str
+    press: str

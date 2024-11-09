@@ -10,7 +10,7 @@ MODEL:
         pretrained_name: 'skt/kobert-base-v1'
         num_classes: 2
     CHECKPOINT:
-        checkpoint_path: /models/BERT/best_model.pt
+        checkpoint_path: ./models/BERT/best_model.pt
 
 TRAIN:
     batch_size: 64

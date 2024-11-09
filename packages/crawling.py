@@ -7,8 +7,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
-from models import create_model, create_tokenizer
-
 
 def set_chromedriver(path: str = "/usr/bin/chromedriver"):
     global driver
@@ -45,6 +43,7 @@ def get_news_info(url: str):
         By.CLASS_NAME, "NewsEndMain_article_head_title__ztaL4"
     ).text
     content = driver.find_element(By.CLASS_NAME, "_article_content").text
+    content = re.sub(r"\n", " ", content)
 
     email_pattern = r"[a-zA-Z0-9._+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,4}"
     email_text = driver.find_element(
@@ -60,7 +59,11 @@ def get_news_info(url: str):
         By.XPATH, '//*[@id="content"]/div[1]/div/div[1]/div/div[1]/a/img'
     ).get_attribute("alt")
 
-    date = driver.find_element(By.CLASS_NAME, "NewsEndMain_article_date__20A4F").text
+    # date = driver.find_element(By.CLASS_NAME, "NewsEndMain_article_date__20A4F").text
+    date = driver.find_element(
+        By.XPATH,
+        '//*[@id="content"]/div[1]/div/div[1]/div/div[1]/div[2]/div[1]/div[2]/em',
+    ).text
     date = convert_date(date)
 
     return {

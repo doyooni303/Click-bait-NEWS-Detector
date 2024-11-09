@@ -4,10 +4,6 @@ import torch.nn as nn
 
 from .registry import register_model
 
-import logging
-
-_logger = logging.getLogger("train")
-
 
 class DualBERT(BertPreTrainedModel):
     def __init__(self, pretrained_name: str, config: dict, num_classes: int):

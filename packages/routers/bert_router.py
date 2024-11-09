@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 import torch
 
-
+from packages.crawling import crawl
 from packages.config import DataInput, PredictOutput, ProjectConfig
 
 
@@ -40,22 +40,48 @@ def preprocess(tokenizer, title, text) -> dict:
 
 
 # router 마다 경로 설정
-@bert.get("/", tags=["BERT"])
-async def start_ncf():
-    return {"msg": "Here is BERT"}
+@bert.get("/home", tags=["BERT"])
+async def start_bert():
+    return "Welcome to BERT world!"
 
 
-@bert.post("/predict", tags=["BERT"], response_model=PredictOutput)
-async def ncf_predict(data_request: DataInput):
-    title = data_request.title
-    content = data_request.content
-    doc = preprocess(tokenizer, title, content)
+# @bert.post("/predict", tags=["BERT"], response_model=PredictOutput)
+# async def bert_predict(data_request: DataInput):
+#     title = data_request.title
+#     content = data_request.content
+#     doc = preprocess(tokenizer, title, content)
+#     doc = convert_device(doc, device)
+#     outputs = model(**doc)
+#     outputs = torch.nn.functional.softmax(outputs, dim=1).cpu()
+#     pred = outputs.argmax(dim=1)  # 비낚시성 = 1, 낚시성 = 0
+#     prob = outputs[pred]
+
+#     prediction = "Fake" if pred == 0 else "Not Fake"
+
+#     return {"prob": prob * 100, "prediction": prediction}
+
+
+@bert.get("/predict", tags=["BERT"], response_model=PredictOutput)
+async def bert_predict(url: str):
+    info = crawl(url)
+    doc = preprocess(tokenizer, info["title"], info["content"])
     doc = convert_device(doc, device)
     outputs = model(**doc)
-    outputs = torch.nn.functional.softmax(outputs, dim=1).cpu()
-    pred = outputs.argmax(dim=1)  # 비낚시성 = 1, 낚시성 = 0
-    prob = outputs[pred]
-
+    outputs = torch.nn.functional.softmax(outputs, dim=1).cpu().squeeze()
+    pred = outputs.argmax()  # 비낚시성 = 1, 낚시성 = 0
     prediction = "Fake" if pred == 0 else "Not Fake"
+    prob = round(outputs[0].item() * 100, 2)
 
-    return {"prob": prob * 100, "prediction": prediction}
+    del doc
+    torch.cuda.empty_cache()
+
+    return {
+        "prob": f"{prob}%",
+        "prediction": prediction,
+        "title": info["title"],
+        "content": info["content"],
+        "date": info["date"],
+        "reporter": info["reporter"],
+        "email": info["email"],
+        "press": info["press"],
+    }
