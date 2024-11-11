@@ -1,7 +1,7 @@
 import logging
 from argparse import ArgumentParser
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -31,14 +31,11 @@ app.include_router(crawler)
 
 
 @app.get("/", response_class=HTMLResponse)
-async def get_html():
+async def home(request: Request):
     try:
-        with open("templates/home.html") as f:
-            return f.read()
-
-        # return templates.TemplateResponse(
-        #     "home.html", {"request": request, "result": None}
-        # )
+        return templates.TemplateResponse(
+            "home.html", {"request": request, "result": None}
+        )
     except FileNotFoundError:
         logger.error("home.html not found in static directory")
         raise HTTPException(status_code=500, detail="Template not found")

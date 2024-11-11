@@ -61,7 +61,7 @@ async def start_bert():
 #     return {"prob": prob * 100, "prediction": prediction}
 
 
-@bert.get("/predict", tags=["BERT"], response_model=PredictOutput)
+@bert.get("/detect", tags=["BERT"], response_model=PredictOutput)
 async def bert_predict(url: str):
     info = crawl(url)
     doc = preprocess(tokenizer, info["title"], info["content"])

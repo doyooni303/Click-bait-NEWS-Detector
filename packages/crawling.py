@@ -45,14 +45,17 @@ def get_news_info(url: str):
     content = driver.find_element(By.CLASS_NAME, "_article_content").text
     content = re.sub(r"\n", " ", content)
 
-    email_pattern = r"[a-zA-Z0-9._+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,4}"
+    email_pattern = r"[a-zA-Z0-9._+-]+@[a-zA-Z0-9.]"
     email_text = driver.find_element(
         By.CLASS_NAME, "NewsEndMain_article_journalist_info__Cdr3D"
     ).text
     email = re.findall(email_pattern, email_text)[0]
 
-    reporter_pattern = r"[ㄱ-ㅎ가-힣]+ +기자"
-    reporter_text = driver.find_element(By.CLASS_NAME, "NewsEndMain_name__lNckc").text
+    reporter_pattern = r"[^ㄱ-ㅎ가-힣]"
+    reporter_text = driver.find_element(
+        By.XPATH, '//*[@id="content"]/div[1]/div/div[1]/div/div[2]/div[1]/span'
+    ).text
+
     reporter = re.sub(reporter_pattern, "", reporter_text).strip()
 
     press = driver.find_element(

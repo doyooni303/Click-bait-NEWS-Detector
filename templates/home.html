@@ -3,90 +3,212 @@
 <head>
     <title>Fake News Detection</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+        :root {
+            --primary-color: #001df7;
+            --secondary-color: #4a90e2;
+            --background-color: #f5f5f5;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: var(--background-color);
+            line-height: 1.6;
+        }
+
         .header {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 1rem;
+            margin-bottom: 2rem;
             background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
         }
+
         .logo {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             object-fit: contain;
         }
+
+        .title-group {
+            flex-grow: 1;
+        }
+
         h1 {
             margin: 0;
-            color: #5418d6;
+            color: var(--primary-color);
+            font-size: 1.8rem;
         }
-        .search-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+
+        h3 {
+            margin: 0.5rem 0 0;
+            color: #666;
+        }
+
+        .form-group {
             background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
         }
-        input {
+
+        .form-group h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.4rem;
+        }
+
+        form {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        input[type="text"] {
             flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
+            padding: 0.8rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
         }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
         button {
-            padding: 10px 20px;
-            background-color: #4a90e2;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--secondary-color);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.1s ease;
         }
+
         button:hover {
             background-color: #357abd;
         }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
         #result {
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+            display: none;
         }
-        .success {
+
+        .result-success {
             background-color: #e6ffe6;
-            border: 1px solid #b3ffb3;
+            border-left: 4px solid #28a745;
         }
-        .error {
+
+        .result-error {
             background-color: #ffe6e6;
-            border: 1px solid #ffb3b3;
+            border-left: 4px solid #dc3545;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+
+            form {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <img src="/static/logo.png" alt="SNU Logo" class="logo">
-        <!-- <h1>Fake News Detection</h1><br>
-        <h3>by DY</h3></div> -->
-        <div class="title-container">
-            <h1 class="main-title">Fake News Detection</h1>
-            <div class="subtitle">by DY</div>
+        <img src="../static/logo.png" alt="로고" class="logo">
+        <div class="title-group">
+            <h1>낚시성 뉴스 탐지 시스템</h1>
+            <h3>by DY(doyooni303@snu.ac.kr)</h3>
         </div>
     </div>
-    <div class="search-container">
-        <input type="text" id="nameInput" placeholder="Enter URL...">
-        <button onclick="searchPhone()">Detect</button>
+    <!-- <div class="select-section">
+        <h2>1. Select Model</h2>
+        <select id="modelSelect" onchange="showSelection('modelSelect', 'modelResult')">
+            <option value="">Select Model</option>
+            <option value="BERT">BERT</option>
+        </select>
+        <div id="modelResult" class="result"></div>
+    </div> -->
+    <div class="form-group">
+        <h2>뉴스 기사의 URL을 입력하세요</h2>
+        <form onsubmit="detectFakeNews">
+            <input type="text" name="urlInput" placeholder="URL 입력...">
+            <button type="submit">검사</button>
+        </form>
+        <div id="result"></div>
     </div>
-    <div id="result"></div>
+    <!-- <div class="form-group">
+        <h2>뉴스 기사의 URL을 입력하세요</h2>
+        <form id="newsForm">
+            <input type="text" id="urlInput" placeholder="URL 입력...">
+            <button onclick="detectFakeNews()">검사</button>
+        </form>
+    </div>
+    <div id="result"></div> -->
+
+    <script>
+        // This JavaScript function calls the FastAPI endpoint
+        const API_URL = 'http://127.0.0.1:8000';
+               
+        async function detectFakeNews() {
+            const urlInput = document.getElementById('urlInput');  
+            const resultDiv = document.getElementById('result');
+            const url = urlInput.value;
+            console.log("실행됩니까?");
+
+            try {
+                const response = await fetch(`${API_URL}/BERT/detect?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                
+                showResult(`Here is the result:\n${data}`, 'success');
+                
+                
+                
+            } catch (error) {
+                document.getElementById('result').innerText = 
+                    'Error occurred while fetching the result';
+            }
+        }
+
+        // Helper function to show results
+        async function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = type;
+        }
+        
+        // Add Enter key support
+        document.getElementById('urlInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                detectFakeNews();
+            }
+        });
+    </script>
+</body>
+</html>
