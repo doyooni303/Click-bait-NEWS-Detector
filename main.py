@@ -40,7 +40,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def get_form(request: Request):
     try:
         return templates.TemplateResponse(
-            "home2.html",  # Make sure this file exists in your templates directory
+            "home.html",  # Make sure this file exists in your templates directory
             {"request": request},
         )
     except FileNotFoundError:
