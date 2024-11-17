@@ -1,212 +1,573 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>Fake News Detection</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>낚시성 뉴스 기사</title>
     <style>
-        :root {
-            --primary-color: #001df7;
-            --secondary-color: #4a90e2;
-            --background-color: #f5f5f5;
-            --shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-            background-color: var(--background-color);
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f6f7;
         }
-
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
+        .form-container {
             background-color: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
-        .logo {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-        }
-
-        .title-group {
-            flex-grow: 1;
-        }
-
         h1 {
-            margin: 0;
-            color: var(--primary-color);
-            font-size: 1.8rem;
-        }
-
-        h3 {
-            margin: 0.5rem 0 0;
-            color: #666;
-        }
-
-        .form-group {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            margin-bottom: 2rem;
-        }
-
-        .form-group h2 {
-            margin-top: 0;
             color: #333;
-            font-size: 1.4rem;
+            font-size: 24px;
+            margin-bottom: 30px;
         }
-
-        form {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
+        .form-group {
+            margin-bottom: 20px;
         }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 0.8rem 1rem;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
         }
-
-        input[type="text"]:focus {
+        input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input[type="url"]:focus {
             outline: none;
-            border-color: var(--secondary-color);
+            border-color: #03c75a;
+        }
+        /* Keep your existing styles and add/modify these: */
+        .radio-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
         }
 
-        button {
-            padding: 0.8rem 1.5rem;
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.1s ease;
+        .radio-item {
+            position: relative;
         }
 
-        button:hover {
-            background-color: #357abd;
-        }
-
-        button:active {
-            transform: translateY(1px);
-        }
-
-        #result {
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            margin-top: 2rem;
+        .radio-item input[type="radio"] {
             display: none;
         }
 
-        .result-success {
-            background-color: #e6ffe6;
-            border-left: 4px solid #28a745;
+        .radio-item label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            color: #495057;
+            margin: 0;
+            position: relative;
+            padding-left: 40px;
         }
 
-        .result-error {
-            background-color: #ffe6e6;
-            border-left: 4px solid #dc3545;
+        .radio-item label:before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #ced4da;
+            border-radius: 50%;
+            transition: all 0.3s ease;
         }
 
-        @media (max-width: 600px) {
-            body {
-                padding: 1rem;
-            }
+        .radio-item input[type="radio"]:checked + label {
+            background-color: #e8f5e9;
+            border-color: #03c75a;
+            color: #03c75a;
+        }
 
-            form {
-                flex-direction: column;
-            }
+        .radio-item input[type="radio"]:checked + label:before {
+            background-color: #03c75a;
+            border-color: #03c75a;
+        }
 
-            button {
-                width: 100%;
+        .radio-item input[type="radio"]:checked + label:after {
+            content: '';
+            position: absolute;
+            left: 21px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .radio-item label:hover {
+            background-color: #e9ecef;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Animation for radio selection */
+        @keyframes radio-ripple {
+            0% {
+                box-shadow: 0 0 0 1px rgba(3, 199, 90, 0.1);
             }
+            50% {
+                box-shadow: 0 0 0 8px rgba(3, 199, 90, 0.1);
+            }
+            100% {
+                box-shadow: 0 0 0 12px rgba(3, 199, 90, 0);
+            }
+        }
+
+        .radio-item input[type="radio"]:checked + label:before {
+            animation: radio-ripple 0.4s ease-out;
+        }
+
+        /* Make the form container more attractive */
+        .form-container {
+            background-color: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05), 
+                        0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Enhance the URL input */
+        input[type="url"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #03c75a;
+            box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.1);
+        }
+
+        /* Make the submit button more attractive */
+        button[type="submit"] {
+            background-color: #03c75a;
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #02b350;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(3, 199, 90, 0.2);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        /* Enhanced loading animation */
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            color: #03c75a;
+            font-weight: 500;
+        }
+
+        .loading:after {
+            content: '...';
+            animation: loading-dots 1.5s infinite;
+        }
+
+        @keyframes loading-dots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+        }
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        button {
+            background-color: #03c75a;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #02b350;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .results-container {
+            margin-top: 20px;
+        }
+        .result-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .prediction {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .fake {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .not-fake {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .meta-info {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    
+        .reset-button {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            flex: 1;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: none;  /* Hidden by default */
+        }
+    
+        .reset-button:hover {
+            background-color: #dee2e6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    
+        .reset-button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+    
+        .title-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 8px;
+        }
+    
+        .logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+    
+        .title-wrapper {
+            flex-grow: 1;
+        }
+    
+        .main-title {
+            color: #333;
+            font-size: 32px;
+            margin: 0;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+    
+        .author-info {
+            color: #666;
+            font-size: 14px;
+            margin: 5px 0 0 0;
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    
+        .author-info a {
+            color: #03c75a;
+            text-decoration: none;
+            position: relative;
+        }
+    
+        .author-info a::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            bottom: -1px;
+            left: 0;
+            background-color: #03c75a;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+    
+        .author-info a:hover::after {
+            transform: scaleX(1);
+        }
+    
+        /* Logo hover effect */
+        .logo {
+            transition: transform 0.3s ease;
+        }
+    
+        .logo:hover {
+            transform: scale(1.05);
+        }
+    
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .title-container {
+                gap: 10px;
+            }
+    
+            .logo {
+                width: 40px;
+                height: 40px;
+            }
+    
+            .main-title {
+                font-size: 24px;
+            }
+        }
+
+        /* Optional: Add animation for logo */
+        @keyframes logo-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    
+        /* Modify the existing submit button for the button group */
+        button[type="submit"] {
+            flex: 2;  /* Takes up more space than reset button */
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <img src="../static/logo.png" alt="로고" class="logo">
-        <div class="title-group">
-            <h1>낚시성 뉴스 탐지 시스템</h1>
-            <h3>by DY(doyooni303@snu.ac.kr)</h3>
+
+    <div class="form-container">
+        <div class="header">
+            <div class="title-container">
+                <!-- Option 1: Using an image logo -->
+                <img src="/static/logo.png" alt="Logo" class="logo">
+            <div class="title-wrapper">
+                <h1 class="main-title">낚시성 뉴스 기사 탐지</h1>
+                <p class="author-info">
+                    By. DY (doyooni303@snu.ac.kr)
+                </p>
+            </div>
         </div>
-    </div>
-    <!-- <div class="select-section">
-        <h2>1. Select Model</h2>
-        <select id="modelSelect" onchange="showSelection('modelSelect', 'modelResult')">
-            <option value="">Select Model</option>
-            <option value="BERT">BERT</option>
-        </select>
-        <div id="modelResult" class="result"></div>
-    </div> -->
-    <div class="form-group">
-        <h2>뉴스 기사의 URL을 입력하세요</h2>
-        <form onsubmit="detectFakeNews">
-            <input type="text" name="urlInput" placeholder="URL 입력...">
-            <button type="submit">검사</button>
-        </form>
-        <div id="result"></div>
-    </div>
-    <!-- <div class="form-group">
-        <h2>뉴스 기사의 URL을 입력하세요</h2>
+    </div>        
         <form id="newsForm">
-            <input type="text" id="urlInput" placeholder="URL 입력...">
-            <button onclick="detectFakeNews()">검사</button>
+            <div class="form-group">
+                <label for="newsUrl">뉴스 URL:</label>
+                <input type="url" id="newsUrl" name="newsUrl" placeholder="https://news.naver.com/..." required>
+            </div>
+            
+            <div class="form-group">
+                <label>카테고리:</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="politics" name="category" value="정치" required>
+                        <label for="politics">정치</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="economy" name="category" value="경제">
+                        <label for="economy">경제</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="society" name="category" value="사회">
+                        <label for="society">사회</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="culture" name="category" value="생활/문화">
+                        <label for="culture">생활/문화</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="world" name="category" value="세계">
+                        <label for="world">세계</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="science" name="category" value="IT/과학">
+                        <label for="science">IT/과학</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="sports" name="category" value="스포츠">
+                        <label for="sports">스포츠</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="entertainment" name="category" value="연예">
+                        <label for="entertainment">연예</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="submit">시작하기</button>
+                <button type="button" id="resetButton" class="reset-button">다시하기</button>
+            </div>
         </form>
+        <div id="loading" class="loading">처리중...</div>
+        <div id="result"></div>
+        <div id="results" class="results-container"></div>
     </div>
-    <div id="result"></div> -->
 
     <script>
-        // This JavaScript function calls the FastAPI endpoint
-        const API_URL = 'http://127.0.0.1:8000';
-               
-        async function detectFakeNews() {
-            const urlInput = document.getElementById('urlInput');  
-            const resultDiv = document.getElementById('result');
-            const url = urlInput.value;
-            console.log("실행됩니까?");
-
+        const form = document.getElementById('newsForm');
+        const resultDiv = document.getElementById('result');
+        const resultsContainer = document.getElementById('results');
+        const loadingDiv = document.getElementById('loading');
+        const resetButton = document.getElementById('resetButton');
+    
+        // Reset function
+        function resetForm() {
+            form.reset();
+            resultDiv.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            resetButton.style.display = 'none';
+        }
+    
+        // Add reset button click handler
+        resetButton.addEventListener('click', resetForm);
+    
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newsUrl = form.newsUrl.value;
+            const category = form.querySelector('input[name="category"]:checked')?.value;
+    
+            if (!category) {
+                resultDiv.textContent = '카테고리를 선택해주세요.';
+                resultDiv.className = 'error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+    
+            if (!newsUrl.includes('naver.com')) {
+                resultDiv.textContent = '네이버 뉴스 URL만 분석 가능합니다.';
+                resultDiv.className = 'error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            resetButton.style.display = 'none';
+            
             try {
-                const response = await fetch(`${API_URL}/BERT/detect?url=${encodeURIComponent(url)}`);
+                const response = await fetch('http://localhost:8000/BERT/detect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "url": newsUrl,
+                        "category": category
+                    })
+                });
+    
                 const data = await response.json();
                 
-                showResult(`Here is the result:\n${data}`, 'success');
-                
-                
-                
+                if (response.ok) {
+                    resultsContainer.innerHTML = `
+                        <div class="result-card">
+                            <div class="result-header">
+                                <strong>분석 결과</strong>
+                                <span class="prediction ${data.prediction === 'Fake' ? 'fake' : 'not-fake'}">
+                                    ${data.prediction === 'Fake' ? '낚시성' : '낚시성 아님'} (${data.prob})
+                                </span>
+                            </div>
+                            
+                            <div class="meta-info">
+                                <div><strong>제목:</strong> ${data.title || '제목 없음'}</div>
+                                <div><strong>언론사:</strong> ${data.press || '정보 없음'}</div>
+                                <div><strong>기자:</strong> ${data.reporter || '정보 없음'}</div>
+                                <div><strong>이메일:</strong> ${data.email || '정보 없음'}</div>
+                                <div><strong>작성일:</strong> ${data.date || '정보 없음'}</div>
+                                <div><strong>본문:</strong> ${data.content ? data.content.substring(0, 200) + '...' : '내용 없음'}</div>
+                            </div>
+                        </div>
+                    `;
+                    resultDiv.textContent = "분석이 완료되었습니다.";
+                    resultDiv.className = 'success';
+                    // Show reset button after successful result
+                    resetButton.style.display = 'block';
+                } else {
+                    resultDiv.textContent = data.detail || '오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                    resultDiv.className = 'error';
+                }
             } catch (error) {
-                document.getElementById('result').innerText = 
-                    'Error occurred while fetching the result';
-            }
-        }
-
-        // Helper function to show results
-        async function showResult(message, type) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.textContent = message;
-            resultDiv.className = type;
-        }
-        
-        // Add Enter key support
-        document.getElementById('urlInput').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                detectFakeNews();
+                console.error('Error:', error);
+                resultDiv.textContent = '서버 연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                resultDiv.className = 'error';
+            } finally {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
             }
         });
     </script>

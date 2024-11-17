@@ -13,6 +13,6 @@ async def start_crawl():
 
 
 @crawler.post("/", tags=["CRAWL"], response_model=DataInput)
-async def get_crawl(url: str):
-    info = crawl(url)
+async def get_crawl(url: str, category: str):
+    info = crawl(url, category)
     return {"title": info["title"], "content": info["content"]}

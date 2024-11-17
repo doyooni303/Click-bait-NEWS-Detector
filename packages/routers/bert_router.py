@@ -1,8 +1,16 @@
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
 from fastapi import APIRouter
 import torch
 
 from packages.crawling import crawl
-from packages.config import DataInput, PredictOutput, ProjectConfig
+from packages.config import PredictOutput, ProjectConfig
+
+
+class Request(BaseModel):
+    url: str
+    category: str
 
 
 # Project config 설정
@@ -45,43 +53,106 @@ async def start_bert():
     return "Welcome to BERT world!"
 
 
-# @bert.post("/predict", tags=["BERT"], response_model=PredictOutput)
-# async def bert_predict(data_request: DataInput):
-#     title = data_request.title
-#     content = data_request.content
-#     doc = preprocess(tokenizer, title, content)
+# @bert.post("/detect", tags=["BERT"], response_model=PredictOutput)
+# async def bert_predict(url: str, category: str):
+#     info = crawl(url, category)
+#     doc = preprocess(tokenizer, info["title"], info["content"])
 #     doc = convert_device(doc, device)
 #     outputs = model(**doc)
-#     outputs = torch.nn.functional.softmax(outputs, dim=1).cpu()
-#     pred = outputs.argmax(dim=1)  # 비낚시성 = 1, 낚시성 = 0
-#     prob = outputs[pred]
-
+#     outputs = torch.nn.functional.softmax(outputs, dim=1).cpu().squeeze()
+#     pred = outputs.argmax()  # 비낚시성 = 1, 낚시성 = 0
 #     prediction = "Fake" if pred == 0 else "Not Fake"
+#     prob = round(outputs[0].item() * 100, 2)
 
-#     return {"prob": prob * 100, "prediction": prediction}
+#     del doc
+#     torch.cuda.empty_cache()
+
+#     return {
+#         "prob": f"{prob}%",
+#         "prediction": prediction,
+#         "title": info["title"],
+#         "content": info["content"],
+#         "press": info["press"],
+#         "date": info["date"],
+#         "reporter": info["reporter"],
+#         "email": info["email"],
+#     }
 
 
-@bert.get("/detect", tags=["BERT"], response_model=PredictOutput)
-async def bert_predict(url: str):
-    info = crawl(url)
-    doc = preprocess(tokenizer, info["title"], info["content"])
-    doc = convert_device(doc, device)
-    outputs = model(**doc)
-    outputs = torch.nn.functional.softmax(outputs, dim=1).cpu().squeeze()
-    pred = outputs.argmax()  # 비낚시성 = 1, 낚시성 = 0
-    prediction = "Fake" if pred == 0 else "Not Fake"
-    prob = round(outputs[0].item() * 100, 2)
+# @bert.post("/detect")
+# async def bert_predict(request: Request):
+#     try:
+#         info = crawl(request.url, request.category)
+#         doc = preprocess(tokenizer, info["title"], info["content"])
+#         doc = convert_device(doc, device)
+#         outputs = model(**doc)
+#         outputs = torch.nn.functional.softmax(outputs, dim=1).cpu().squeeze()
+#         pred = outputs.argmax()
+#         prediction = "Fake" if pred == 0 else "Not Fake"
+#         prob = round(outputs[0].item() * 100, 2)
 
-    del doc
-    torch.cuda.empty_cache()
+#         del doc
+#         torch.cuda.empty_cache()
 
-    return {
-        "prob": f"{prob}%",
-        "prediction": prediction,
-        "title": info["title"],
-        "content": info["content"],
-        "date": info["date"],
-        "reporter": info["reporter"],
-        "email": info["email"],
-        "press": info["press"],
-    }
+
+#         return {
+#             "prob": f"{prob}%",
+#             "prediction": prediction,
+#             "title": info["title"],
+#             "content": info["content"],
+#             "press": info["press"],
+#             "date": info["date"],
+#             "reporter": info["reporter"],
+#             "email": info["email"],
+#         }
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+@bert.post("/detect")
+async def bert_predict(request: Request):
+    try:
+        # First try to crawl
+        # try:
+        info = crawl(request.url, request.category)
+
+        if not info or "title" not in info:
+            raise HTTPException(
+                status_code=400,
+                detail="뉴스를 찾을 수 없습니다. URL을 확인해주세요.",
+            )
+        # except Exception as e:
+        #     raise HTTPException(
+        #         status_code=400,
+        #         detail="크롤링 중 오류가 발생했습니다. URL이 올바른지 확인해주세요.",
+        #     )
+
+        # Then process with BERT
+        try:
+            doc = preprocess(tokenizer, info["title"], info["content"])
+            doc = convert_device(doc, device)
+            outputs = model(**doc)
+            outputs = torch.nn.functional.softmax(outputs, dim=1).cpu().squeeze()
+            pred = outputs.argmax()
+            prediction = "Fake" if pred == 0 else "Not Fake"
+            prob = round(outputs[0].item() * 100, 2)
+
+            del doc
+            torch.cuda.empty_cache()
+
+            return {
+                "prob": f"{prob}%",
+                "prediction": prediction,
+                "title": info["title"],
+                "content": info["content"],
+                "press": info["press"],
+                "date": info["date"],
+                "reporter": info["reporter"],
+                "email": info["email"],
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail="분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+            )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -30,56 +30,117 @@ def convert_date(date):
     return f"{ymd} {h}:{m}"
 
 
-def get_news_info(url: str):
+def _get_class_info(
+    driver,
+    class_name,
+):
+    return driver.find_element(By.CLASS_NAME, class_name).text
+
+
+def get_news_info(
+    url: str,
+    category: str,
+):
     driver.get(url)
 
     driver.implicitly_wait(
         2
     )  # 2초 안에 웹페이지를 load하면 바로 넘어가거나, 2초를 기다림
-
     # 사전 준비
+    email_pattern = (
+        r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}"  # 이메일 정규표현식
+    )
+    reporter_pattern = r"[ㄱ-힣]{2,4}"  # 기자 이름 정규표현식
 
-    title = driver.find_element(
-        By.CLASS_NAME, "NewsEndMain_article_head_title__ztaL4"
-    ).text
-    content = driver.find_element(By.CLASS_NAME, "_article_content").text
-    content = re.sub(r"\n", " ", content)
+    if category in ["정치", "경제", "사회", "생활/문화", "세계", "IT/과학"]:
+        class_dict = {
+            "title": "media_end_head_head_title",
+            "content": "_article_content",
+            "email_reporter": "byline",
+        }
+        # title = _get_class_info(driver, class_dict["title"])
+        # content = _get_class_info(driver, class_dict["content"])
+        title = driver.find_element(By.CLASS_NAME, "media_end_head_title").text
+        content = driver.find_element(By.CLASS_NAME, "_article_content").text
+        email_text = driver.find_element(
+            By.CLASS_NAME, class_dict["email_reporter"]
+        ).text
+        email = re.findall(email_pattern, email_text)[0]
+        reporter = re.findall(reporter_pattern, email_text)[0]
 
-    email_pattern = r"[a-zA-Z0-9._+-]+@[a-zA-Z0-9.]"
-    email_text = driver.find_element(
-        By.CLASS_NAME, "NewsEndMain_article_journalist_info__Cdr3D"
-    ).text
-    email = re.findall(email_pattern, email_text)[0]
+        press = driver.find_element(
+            By.CLASS_NAME, "media_journalistcard_summary_press_img"
+        ).get_attribute("alt")
 
-    reporter_pattern = r"[^ㄱ-ㅎ가-힣]"
-    reporter_text = driver.find_element(
-        By.XPATH, '//*[@id="content"]/div[1]/div/div[1]/div/div[2]/div[1]/span'
-    ).text
+        date_results = driver.find_elements(
+            By.CLASS_NAME, "media_end_head_info_datestamp_bunch"
+        )
 
-    reporter = re.sub(reporter_pattern, "", reporter_text).strip()
+        if len(date_results) > 1:
+            date = driver.find_element(
+                By.CLASS_NAME, "_ARTICLE_MODIFY_DATE_TIME"
+            ).get_attribute("data-modify-date-time")
+        else:
+            date = driver.find_element(
+                By.CLASS_NAME, "_ARTICLE_DATE_TIME"
+            ).get_attribute("data-date-time")
 
-    press = driver.find_element(
-        By.XPATH, '//*[@id="content"]/div[1]/div/div[1]/div/div[1]/a/img'
-    ).get_attribute("alt")
+    elif category in ["스포츠", "연예"]:
+        class_dict = dict(
+            title="NewsEndMain_article_head_title__ztaL4",
+            content="_article_content",
+            email_reporter="NewsEndMain_article_journalist_info__Cdr3D",
+        )
+        title, content = _get_class_info(driver, class_dict["title"]), _get_class_info(
+            driver, class_dict["content"]
+        )
 
-    # date = driver.find_element(By.CLASS_NAME, "NewsEndMain_article_date__20A4F").text
-    date = driver.find_element(
-        By.XPATH,
-        '//*[@id="content"]/div[1]/div/div[1]/div/div[1]/div[2]/div[1]/div[2]/em',
-    ).text
-    date = convert_date(date)
+        email_text = driver.find_element(
+            By.CLASS_NAME, class_dict["email_reporter"]
+        ).text
+        email = re.findall(email_pattern, email_text)[0]
+        reporter = re.findall(reporter_pattern, email_text)[0]
+
+        if category == "스포츠":
+            press = (
+                driver.find_element(
+                    By.CLASS_NAME, "NewsEndMain_comp_article_main_news__0RmSO"
+                )
+                .find_element(By.CLASS_NAME, "NewsEndMain_image_media__rTvT1")
+                .get_attribute("alt")
+            )
+            date_results = driver.find_elements(
+                By.CLASS_NAME, "NewsEndMain_date__xjtsQ"
+            )
+            if len(date_results) > 1:
+                date = date_results[1].text
+            else:
+                date = date_results[0].text
+            date = convert_date(date)
+        else:
+            press = driver.find_element(
+                By.CLASS_NAME, "NewsEndMain_highlight__HWvAi"
+            ).text
+            date_results = driver.find_elements(By.CLASS_NAME, "date")
+            if len(date_results) > 1:
+                date = date_results[1].text
+            else:
+                date = date_results[0].text
+            date = convert_date(date)
 
     return {
         "title": title,
         "content": content,
+        "press": press,
         "date": date,
         "reporter": reporter,
         "email": email,
-        "press": press,
     }
 
 
-def crawl(url: str, chromedriver_path: str = "/usr/bin/chromedriver"):
+def crawl(
+    url: str, category: str = None, chromedriver_path: str = "/usr/bin/chromedriver"
+):
     set_chromedriver(chromedriver_path)
-    info = get_news_info(url)
+    info = get_news_info(url, category)
     return info
