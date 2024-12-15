@@ -230,7 +230,7 @@ async def extract_news_urls(request: URLRequest):
     try:
         extractor = URLExtractor(browser_type="chrome")
 
-        urls = extractor.extract_urls(request.url)
+        urls = extractor.extract_urls(request.url, target_page=2, wait_time=10)
         logger.info(f"Successfully extracted {len(urls)} URLs")
         return {"urls": urls}
 

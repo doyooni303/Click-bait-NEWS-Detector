@@ -2,15 +2,18 @@ import warnings
 
 warnings.filterwarnings(action="ignore")
 
+import json
+import logging
 import re
 import time
-import logging
 from typing import List
+
+# Selenium imports
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 # Configure logging
 logging.basicConfig(
@@ -224,19 +227,155 @@ def crawl(
     return info
 
 
+# class URLExtractor:
+#     def __init__(self, browser_type: str = "chrome"):
+#         """
+#         Initialize the URL extractor with specified browser.
+
+#         Args:
+#             browser_type (str): Type of browser to use ('chrome' or 'firefox')
+#         """
+#         self.setup_logging()
+#         self.driver = self.setup_driver(browser_type)
+
+#     def setup_logging(self):
+#         """Configure logging settings"""
+#         logging.basicConfig(
+#             level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+#         )
+
+#     def setup_driver(
+#         self, browser_type: str = "chrome", path: str = "/usr/bin/chromedriver"
+#     ):
+#         """Set up and configure the WebDriver"""
+#         try:
+#             if browser_type.lower() == "chrome":
+#                 # 크롬 드라이버 사용
+#                 service = Service(
+#                     executable_path=path
+#                 )  # selenium 최근 버전은 이렇게 해야함.
+
+#                 # 이런 것 때문에 기술문서를 보면서 코딩해야하고 영어도 잘해야함. (by. 스터디 팀장님)
+#                 options = webdriver.ChromeOptions()
+#                 options.add_argument("--headless")
+#                 options.add_argument("--no-sandbox")
+#                 options.add_argument("--disable-dev-shm-usage")
+#                 return webdriver.Chrome(options=options, service=service)
+
+#             elif browser_type.lower() == "firefox":
+#                 options = webdriver.FirefoxOptions()
+#                 options.add_argument("--headless")
+#                 return webdriver.Firefox(options=options)
+#             else:
+#                 raise ValueError(f"Unsupported browser type: {browser_type}")
+#         except Exception as e:
+#             logging.error(f"Failed to initialize WebDriver: {str(e)}")
+#             raise
+
+#     # def click_load_more(self) -> bool:
+#     #     try:
+#     #         button = WebDriverWait(self.driver, 10).until(
+#     #             EC.element_to_be_clickable((By.CSS_SELECTOR, "a.section_more_inner"))
+#     #         )
+
+#     #         self.driver.execute_script("arguments[0].scrollIntoView(true);", button)
+#     #         time.sleep(1)
+
+#     #         try:
+#     #             button.click()
+#     #         except:
+#     #             self.driver.execute_script("arguments[0].click();", button)
+
+#     #         time.sleep(2)
+#     #         return True
+
+#     #     except Exception as e:
+#     #         logging.info("No more content to load")
+#     #         return False
+
+#     def extract_urls(self, url: str, wait_time: int = 5) -> List[str]:
+#         try:
+#             self.driver.get(url)
+#             logging.info("Navigated to the target URL")
+
+#             # # Wait for initial content
+#             # WebDriverWait(self.driver, wait_time).until(
+#             #     EC.presence_of_element_located((By.CLASS_NAME, "sa_item"))
+#             # )
+
+#             # # Load all content
+#             # while True:
+#             #     initial_height = self.driver.execute_script(
+#             #         "return document.body.scrollHeight"
+#             #     )
+
+#             #     if not self.click_load_more():
+#             #         break
+
+#             #     # Check if page height increased (new content loaded)
+#             #     new_height = self.driver.execute_script(
+#             #         "return document.body.scrollHeight"
+#             #     )
+#             #     if new_height <= initial_height:
+#             #         break
+
+#             # Extract URLs using specific selectors
+#             urls = []
+
+#             # Find all news article containers
+#             article_elements = self.driver.find_elements(By.CSS_SELECTOR, "li.sa_item")
+
+#             logging.info(f"Found {len(article_elements)} articles")
+
+#             for article in article_elements:
+#                 # Get URL from either thumbnail or title link
+#                 links = article.find_elements(
+#                     By.CSS_SELECTOR, "a.sa_thumb_link, a.sa_text_title"
+#                 )
+
+#                 for link in links:
+#                     href = link.get_attribute("href")
+#                     if href and "news.naver.com/mnews/article" in href:
+#                         urls.append(href)
+#                         break  # Only take one URL per article
+
+#             unique_urls = list(dict.fromkeys(urls))
+#             logging.info(
+#                 f"Successfully extracted {len(unique_urls)} unique article URLs"
+#             )
+
+#             return unique_urls
+
+#         except Exception as e:
+#             logging.error(f"Error extracting URLs: {str(e)}")
+#             return []
+
+#     def close(self):
+#         if self.driver:
+#             self.driver.quit()
+#             logging.info("WebDriver closed successfully")
+
+
+# Python standard library imports
+import json
+import logging
+import time
+from typing import List
+
+# Selenium imports
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
+
 class URLExtractor:
     def __init__(self, browser_type: str = "chrome"):
-        """
-        Initialize the URL extractor with specified browser.
-
-        Args:
-            browser_type (str): Type of browser to use ('chrome' or 'firefox')
-        """
         self.setup_logging()
         self.driver = self.setup_driver(browser_type)
 
     def setup_logging(self):
-        """Configure logging settings"""
         logging.basicConfig(
             level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
         )
@@ -244,21 +383,14 @@ class URLExtractor:
     def setup_driver(
         self, browser_type: str = "chrome", path: str = "/usr/bin/chromedriver"
     ):
-        """Set up and configure the WebDriver"""
         try:
             if browser_type.lower() == "chrome":
-                # 크롬 드라이버 사용
-                service = Service(
-                    executable_path=path
-                )  # selenium 최근 버전은 이렇게 해야함.
-
-                # 이런 것 때문에 기술문서를 보면서 코딩해야하고 영어도 잘해야함. (by. 스터디 팀장님)
+                service = Service(executable_path=path)
                 options = webdriver.ChromeOptions()
                 options.add_argument("--headless")
                 options.add_argument("--no-sandbox")
                 options.add_argument("--disable-dev-shm-usage")
                 return webdriver.Chrome(options=options, service=service)
-
             elif browser_type.lower() == "firefox":
                 options = webdriver.FirefoxOptions()
                 options.add_argument("--headless")
@@ -269,72 +401,124 @@ class URLExtractor:
             logging.error(f"Failed to initialize WebDriver: {str(e)}")
             raise
 
-    # def click_load_more(self) -> bool:
-    #     try:
-    #         button = WebDriverWait(self.driver, 10).until(
-    #             EC.element_to_be_clickable((By.CSS_SELECTOR, "a.section_more_inner"))
-    #         )
+    def find_meta_element(self):
+        """Find the meta element using the JavaScript querySelector path"""
+        try:
+            # Use the exact CSS selector from JavaScript querySelector path
+            meta_element = self.driver.find_element(
+                By.CSS_SELECTOR,
+                "#newsct > div.section_latest > div > div.section_latest_article._CONTENT_LIST._PERSIST_META",
+            )
+            return meta_element
+        except Exception as e:
+            logging.error(f"Failed to find meta element: {str(e)}")
+            raise
 
-    #         self.driver.execute_script("arguments[0].scrollIntoView(true);", button)
-    #         time.sleep(1)
+    def get_current_page_no(self) -> int:
+        """Get the current page number considering both default and clicked states"""
+        try:
+            meta_element = self.find_meta_element()
 
-    #         try:
-    #             button.click()
-    #         except:
-    #             self.driver.execute_script("arguments[0].click();", button)
+            # Check if data-persist-meta exists
+            meta_str = meta_element.get_attribute("data-persist-meta")
+            if meta_str:
+                # We're on a clicked state
+                meta_data = json.loads(meta_str)
+                return int(meta_data.get("page-no", 1))
+            else:
+                # We're on the default page
+                return 1
+        except Exception as e:
+            logging.error(f"Error getting page number: {str(e)}")
+            return 1
 
-    #         time.sleep(2)
-    #         return True
+    def click_load_more(self) -> bool:
+        """Click the '기사더보기' button"""
+        try:
+            # Find button using class selector
+            button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable(
+                    (
+                        By.CSS_SELECTOR,
+                        "a.section_more_inner._CONTENT_LIST_LOAD_MORE_BUTTON",
+                    )
+                )
+            )
 
-    #     except Exception as e:
-    #         logging.info("No more content to load")
-    #         return False
+            # Get current page number before clicking
+            current_page = self.get_current_page_no()
 
-    def extract_urls(self, url: str, wait_time: int = 5) -> List[str]:
+            # Scroll and click
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", button)
+            time.sleep(1)
+            self.driver.execute_script("arguments[0].click();", button)
+
+            # Wait for page update
+            time.sleep(2)
+
+            # Verify page number increased
+            new_page = self.get_current_page_no()
+            success = new_page > current_page
+
+            if success:
+                logging.info(f"Successfully loaded page {new_page}")
+            else:
+                logging.error("Failed to load next page")
+
+            return success
+
+        except Exception as e:
+            logging.error(f"Error clicking 'More Articles' button: {str(e)}")
+            return False
+
+    def extract_urls(
+        self, url: str, target_page: int = 4, wait_time: int = 5
+    ) -> List[str]:
+        """
+        Extract news article URLs after reaching the target page number
+
+        Args:
+            url: Target URL to scrape
+            target_page: Target page number to reach (e.g., 4 means click button 3 times)
+            wait_time: Time to wait for elements to load
+        """
         try:
             self.driver.get(url)
             logging.info("Navigated to the target URL")
 
-            # # Wait for initial content
-            # WebDriverWait(self.driver, wait_time).until(
-            #     EC.presence_of_element_located((By.CLASS_NAME, "sa_item"))
-            # )
+            # Wait for initial content
+            WebDriverWait(self.driver, wait_time).until(
+                lambda driver: self.find_meta_element() is not None
+            )
 
-            # # Load all content
-            # while True:
-            #     initial_height = self.driver.execute_script(
-            #         "return document.body.scrollHeight"
-            #     )
+            # Click until we reach the target page
+            current_page = self.get_current_page_no()
+            while current_page < target_page:
+                if not self.click_load_more():
+                    logging.error(
+                        f"Failed to reach target page. Stopped at page {current_page}"
+                    )
+                    break
+                current_page = self.get_current_page_no()
 
-            #     if not self.click_load_more():
-            #         break
-
-            #     # Check if page height increased (new content loaded)
-            #     new_height = self.driver.execute_script(
-            #         "return document.body.scrollHeight"
-            #     )
-            #     if new_height <= initial_height:
-            #         break
-
-            # Extract URLs using specific selectors
+            # Extract URLs for all loaded content
             urls = []
 
-            # Find all news article containers
-            article_elements = self.driver.find_elements(By.CSS_SELECTOR, "li.sa_item")
-
-            logging.info(f"Found {len(article_elements)} articles")
-
-            for article in article_elements:
-                # Get URL from either thumbnail or title link
-                links = article.find_elements(
-                    By.CSS_SELECTOR, "a.sa_thumb_link, a.sa_text_title"
+            # Use WebDriverWait to ensure articles are loaded
+            article_links = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_all_elements_located(
+                    (By.CSS_SELECTOR, "a.sa_text_title._NLOG_IMPRESSION")
                 )
+            )
 
-                for link in links:
+            # Get URLs from all visible articles
+            for link in article_links:
+                try:
                     href = link.get_attribute("href")
                     if href and "news.naver.com/mnews/article" in href:
                         urls.append(href)
-                        break  # Only take one URL per article
+                except:
+                    continue
 
             unique_urls = list(dict.fromkeys(urls))
             logging.info(
@@ -347,7 +531,7 @@ class URLExtractor:
             logging.error(f"Error extracting URLs: {str(e)}")
             return []
 
-    def close(self):
-        if self.driver:
+    def __del__(self):
+        """Clean up WebDriver when done"""
+        if hasattr(self, "driver"):
             self.driver.quit()
-            logging.info("WebDriver closed successfully")
