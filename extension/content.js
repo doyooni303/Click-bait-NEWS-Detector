@@ -73,7 +73,8 @@ async function analyzeNews() {
     if (!urlResponse.ok) throw new Error('URL 추출 실패');
     
     const { urls } = await urlResponse.json();
-    let progress = 0;
+    let processedCount = 0;
+    const totalUrls = urls.length;
     
     chrome.runtime.sendMessage({ 
       type: 'setState', 
@@ -103,9 +104,10 @@ async function analyzeNews() {
 
           // Store result first
           analysisResults.set(url, result);
-
+          
           // Update progress and title immediately after getting result
-          const currentProgress = Math.round(((analysisResults.size) / urls.length) * 100);
+          processedCount++;
+          const currentProgress = Math.min(Math.floor((processedCount / totalUrls) * 100), 100);
           chrome.runtime.sendMessage({ 
             type: 'progress', 
             progress: currentProgress,

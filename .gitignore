@@ -1,4 +1,5 @@
 models/*/*.pt
 */__pycache__/
 */*/__pycache__/
-.ipynb
+__pycache__
+*.ipynb
