@@ -3,3 +3,4 @@ models/*/*.pt
 */*/__pycache__/
 __pycache__
 *.ipynb
+extension_*/
