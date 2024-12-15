@@ -1,6 +1,33 @@
 let isAnalyzing = false;
 let analysisResults = new Map();
 const API_BASE_URL = 'http://127.0.0.1:8000';
+const tooltipStyles = `
+  #clickbait-tooltip {
+    position: absolute;
+    z-index: 10000;
+    background-color: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    max-width: 300px;
+    font-family: 'NanumSquare', sans-serif;
+  }
+
+  .tooltip-content h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .tooltip-details {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+`;
+
+
 
 function getCategory(url) {
   if (url.includes('news.naver.com/section/')) {
@@ -37,8 +64,6 @@ async function analyzeNews() {
   }
 
   try {
-    // Extract URLs
-    
     const urlResponse = await fetch(`${API_BASE_URL}/BERT/extract-urls`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -50,14 +75,12 @@ async function analyzeNews() {
     const { urls } = await urlResponse.json();
     let progress = 0;
     
-    // Update state to start analysis
     chrome.runtime.sendMessage({ 
       type: 'setState', 
       state: { isAnalyzing: true, progress: 0 }
     });
     
     for (const url of urls) {
-      // Check both local and global state
       if (!isAnalyzing) {
         chrome.runtime.sendMessage({ 
           type: 'stopped',
@@ -67,7 +90,7 @@ async function analyzeNews() {
       }
       
       try {
-        await delay(1000); // 1 second delay
+        await delay(300);  // Reduced initial delay
 
         const response = await fetch(`${API_BASE_URL}/BERT/detect`, {
           method: 'POST',
@@ -77,22 +100,31 @@ async function analyzeNews() {
         
         if (response.ok) {
           const result = await response.json();
+
+          // Store result first
           analysisResults.set(url, result);
-          attachTooltip(url, result);
+
+          // Update progress and title immediately after getting result
+          const currentProgress = Math.round(((analysisResults.size) / urls.length) * 100);
+          chrome.runtime.sendMessage({ 
+            type: 'progress', 
+            progress: currentProgress,
+            title: result.title
+          });
+
+          // Attach tooltip in background without waiting
+          attachTooltip(url, result).catch(error => {
+            console.error('Error attaching tooltip:', error);
+          });
+
+          // Minimal delay between requests
+          await delay(200);
         }
       } catch (error) {
         console.error(`Error analyzing ${url}:`, error);
       }
-      progress = Math.min(Math.round(((++progress) / urls.length) * 100), 100); // Ensures progress never exceeds 100
-      chrome.runtime.sendMessage({ 
-        type: 'progress', 
-        progress,
-        state: { progress } 
-      });
 
-      // If analysis is complete, update state
-      if (progress === 100) {
-        await delay(1000);
+      if (analysisResults.size === urls.length) {
         chrome.runtime.sendMessage({ 
           type: 'setState', 
           state: { isAnalyzing: false }
@@ -108,7 +140,6 @@ async function analyzeNews() {
   }
 }
 
-
 function attachTooltip(url, result) {
   const newsElements = document.querySelectorAll('a[href*="' + url + '"]');
   newsElements.forEach(element => {
@@ -122,6 +153,7 @@ function attachTooltip(url, result) {
   });
 }
 
+
 function showTooltip(event, result) {
   let tooltip = document.getElementById('clickbait-tooltip');
   if (!tooltip) {
@@ -132,30 +164,37 @@ function showTooltip(event, result) {
   
   const consistencyColor = result.prediction === '일치' ? '#03C75A' : '#DC3545';
   
-  // tooltip.innerHTML = `
-  //   <div class="tooltip-content">
-  //     <h3>${result.title}</h3>
-  //     <div class="tooltip-details">
-  //       <span style="color: ${consistencyColor}">
-  //         ${result.prediction} (${result.prob})
-  //       </span>
-  //     </div>
-  //   </div>
-  // `;
-  tooltip.innerHTML = `
-    <div class="tooltip-content">
-      <h3>${result.title}</h3>
-      <div class="tooltip-details">
-        <span style="color: ${consistencyColor}">
-          일치성 검사 여부: ${result.prediction} 
-        </span>
-        <span style="color: ${consistencyColor}">
-          일치율: ${result.prob}
-        </span>
-      </div>
-    </div>
-  `;
+  // Create elements manually instead of using innerHTML
+  const tooltipContent = document.createElement('div');
+  tooltipContent.className = 'tooltip-content';
+
+  const titleElement = document.createElement('h3');
+  titleElement.textContent = result.title;  // textContent handles encoding automatically
+
+  const detailsDiv = document.createElement('div');
+  detailsDiv.className = 'tooltip-details';
+
+  const predictionSpan = document.createElement('span');
+  predictionSpan.style.color = consistencyColor;
+  predictionSpan.textContent = `결과: ${result.prediction}`;
+
+  const probSpan = document.createElement('span');
+  probSpan.style.color = consistencyColor;
+  probSpan.textContent = `일치율: ${result.prob}`;
+
+  // Assemble the tooltip
+  detailsDiv.appendChild(predictionSpan);
+  detailsDiv.appendChild(document.createElement('br'));  // Add line break
+  detailsDiv.appendChild(probSpan);
   
+  tooltipContent.appendChild(titleElement);
+  tooltipContent.appendChild(detailsDiv);
+
+  // Clear and update tooltip
+  tooltip.innerHTML = '';
+  tooltip.appendChild(tooltipContent);
+
+  // Position the tooltip
   const rect = event.target.getBoundingClientRect();
   tooltip.style.left = `${window.scrollX + rect.right + 10}px`;
   tooltip.style.top = `${window.scrollY + rect.top}px`;
@@ -178,3 +217,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     isAnalyzing = false;
   }
 });
+
+// Add styles to document
+const styleSheet = document.createElement('style');
+styleSheet.textContent = tooltipStyles;
+document.head.appendChild(styleSheet);
