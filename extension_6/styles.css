@@ -1,0 +1,65 @@
+@import url('https://hangeul.pstatic.net/hangeul_static/css/nanum-square.css');
+
+#clickbait-tooltip {
+  position: absolute;
+  z-index: 10000;
+  background-color: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  display: none;
+  max-width: 300px;
+  font-family: 'NanumSquare', sans-serif;
+}
+
+.tooltip-content {
+  font-size: 14px;
+}
+
+.tooltip-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.tooltip-details {
+  font-size: 13px;
+  color: #666;
+}
+
+.tooltip-details span {
+  font-weight: bold;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+  }
+  
+.button {
+flex: 1;  /* Make buttons take equal space */
+padding: 8px 16px;
+border-radius: 4px;
+font-family: 'NanumSquare', sans-serif;
+font-weight: bold;
+font-size: 14px;
+cursor: pointer;
+transition: all 0.2s;
+border: none;
+max-width: 120px;  /* Limit maximum width */
+min-width: 80px;   /* Ensure minimum width */
+}
+
+#startButton {
+background-color: #03C75A;
+color: white;
+}
+
+#cancelButton {
+background-color: #DC3545;
+color: white;
+}

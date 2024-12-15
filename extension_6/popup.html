@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square.css" rel="stylesheet">
+  <style>
+    body {
+      width: 320px;
+      padding: 24px;
+      font-family: 'NanumSquare', sans-serif;
+      background-color: #ffffff;
+      margin: 0;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    h1 {
+      font-size: 20px;
+      text-align: center;
+      margin: 0;
+      color: #333;
+      font-weight: 800;
+      white-space: nowrap; /* Prevent text wrapping */
+    }
+    
+    .controls {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      justify-content: center;
+      padding: 0 20px; /* Add padding for better button spacing */
+    }
+    
+    .button {
+      flex: 1;
+      max-width: 100px; /* Limit button width */
+      padding: 10px 0;
+      border-radius: 6px;
+      font-family: 'NanumSquare', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      text-align: center;
+    }
+    
+    .progress-label {
+        font-size: 16px;
+        color: #444;
+        margin-bottom: 12px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+    #progressText {
+    color: #03C75A;
+    font-weight: 800;
+    min-width: 4em; /* Ensures consistent width for percentage text */
+    text-align: right;
+    }
+    
+    .progress-bar {
+    width: 100%;
+    height: 12px;
+    background-color: #e9ecef;
+    border-radius: 100px;
+    overflow: hidden;
+    }
+    
+    .progress {
+    width: 0%;
+    height: 100%;
+    background-color: #03C75A;
+    transition: width 0.3s ease;
+    max-width: 100%; /* Ensures progress bar never exceeds container */
+    }
+    
+    #startButton {
+      background-color: #03C75A;
+      color: white;
+    }
+    
+    #startButton:hover {
+      background-color: #02B350;
+    }
+    
+    #cancelButton {
+      background-color: #DC3545;
+      color: white;
+    }
+    
+    #cancelButton:hover {
+      background-color: #C82333;
+    }
+    
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    #progressContainer {
+      margin-top: 10px;
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>뉴스 기사 제목-본문 간 일치성 검사</h1>
+    
+    <div class="controls">
+        <button id="startButton" class="button">시작</button>
+        <button id="cancelButton" class="button">중지</button>
+    </div>
+    
+    <div id="progressContainer" style="display: none;">
+        <div class="progress-label">검사 진행률: <span id="progressText">0%</span></div>
+        <div class="progress-bar">
+          <div id="progressBar" class="progress"></div>
+        </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
