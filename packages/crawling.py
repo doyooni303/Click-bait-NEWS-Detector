@@ -356,21 +356,14 @@ def crawl(
 #             logging.info("WebDriver closed successfully")
 
 
-# Python standard library imports
-import json
-import logging
-import time
-from typing import List
-
-# Selenium imports
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-
-
 class URLExtractor:
+    # URL patterns for different sections
+    URL_PATTERNS = {
+        "news": r"https://news\.naver\.com/section/\d+",
+        "entertainment": r"https://entertain\.naver\.com/now",
+        "sports": r"https://sports\.news\.naver\.com/\w+/news/index\?isphoto=N",
+    }
+
     def __init__(self, browser_type: str = "chrome"):
         self.setup_logging()
         self.driver = self.setup_driver(browser_type)
@@ -401,135 +394,135 @@ class URLExtractor:
             logging.error(f"Failed to initialize WebDriver: {str(e)}")
             raise
 
-    def find_meta_element(self):
-        """Find the meta element using the JavaScript querySelector path"""
+    def detect_url_type(self, url: str) -> str:
+        """Detect the type of URL based on patterns"""
+        for url_type, pattern in self.URL_PATTERNS.items():
+            if re.match(pattern, url):
+                return url_type
+        raise ValueError(f"URL does not match any known pattern: {url}")
+
+    def extract_urls_news(self, url: str, count_clicks: int = 3) -> List[str]:
+        """Extract URLs from news section"""
         try:
-            # Use the exact CSS selector from JavaScript querySelector path
+            self.driver.get(url)
             meta_element = self.driver.find_element(
                 By.CSS_SELECTOR,
                 "#newsct > div.section_latest > div > div.section_latest_article._CONTENT_LIST._PERSIST_META",
             )
-            return meta_element
-        except Exception as e:
-            logging.error(f"Failed to find meta element: {str(e)}")
-            raise
 
-    def get_current_page_no(self) -> int:
-        """Get the current page number considering both default and clicked states"""
-        try:
-            meta_element = self.find_meta_element()
+            urls = []
+            click_count = 0
 
-            # Check if data-persist-meta exists
-            meta_str = meta_element.get_attribute("data-persist-meta")
-            if meta_str:
-                # We're on a clicked state
-                meta_data = json.loads(meta_str)
-                return int(meta_data.get("page-no", 1))
-            else:
-                # We're on the default page
-                return 1
-        except Exception as e:
-            logging.error(f"Error getting page number: {str(e)}")
-            return 1
-
-    def click_load_more(self) -> bool:
-        """Click the '기사더보기' button"""
-        try:
-            # Find button using class selector
-            button = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable(
-                    (
-                        By.CSS_SELECTOR,
-                        "a.section_more_inner._CONTENT_LIST_LOAD_MORE_BUTTON",
-                    )
-                )
+            # Initial articles
+            article_links = self.driver.find_elements(
+                By.CSS_SELECTOR, "a.sa_text_title._NLOG_IMPRESSION"
             )
+            for link in article_links:
+                href = link.get_attribute("href")
+                if href and "news.naver.com/mnews/article" in href:
+                    urls.append(href)
 
-            # Get current page number before clicking
-            current_page = self.get_current_page_no()
+            # Click "더보기" button specified number of times
+            while click_count < count_clicks:
+                try:
+                    button = WebDriverWait(self.driver, 10).until(
+                        EC.element_to_be_clickable(
+                            (
+                                By.CSS_SELECTOR,
+                                "a.section_more_inner._CONTENT_LIST_LOAD_MORE_BUTTON",
+                            )
+                        )
+                    )
+                    self.driver.execute_script("arguments[0].click();", button)
+                    time.sleep(2)
 
-            # Scroll and click
-            self.driver.execute_script("arguments[0].scrollIntoView(true);", button)
-            time.sleep(1)
-            self.driver.execute_script("arguments[0].click();", button)
+                    # Get new articles
+                    article_links = self.driver.find_elements(
+                        By.CSS_SELECTOR, "a.sa_text_title._NLOG_IMPRESSION"
+                    )
+                    for link in article_links:
+                        href = link.get_attribute("href")
+                        if href and "news.naver.com/mnews/article" in href:
+                            urls.append(href)
 
-            # Wait for page update
-            time.sleep(2)
+                    click_count += 1
+                except Exception as e:
+                    logging.error(f"Error clicking more button: {str(e)}")
+                    break
 
-            # Verify page number increased
-            new_page = self.get_current_page_no()
-            success = new_page > current_page
-
-            if success:
-                logging.info(f"Successfully loaded page {new_page}")
-            else:
-                logging.error("Failed to load next page")
-
-            return success
-
+            return list(dict.fromkeys(urls))
         except Exception as e:
-            logging.error(f"Error clicking 'More Articles' button: {str(e)}")
-            return False
+            logging.error(f"Error in news extraction: {str(e)}")
+            return []
 
-    def extract_urls(
-        self, url: str, target_page: int = 4, wait_time: int = 5
-    ) -> List[str]:
-        """
-        Extract news article URLs after reaching the target page number
-
-        Args:
-            url: Target URL to scrape
-            target_page: Target page number to reach (e.g., 4 means click button 3 times)
-            wait_time: Time to wait for elements to load
-        """
+    def extract_urls_entertainment(self, url: str) -> List[str]:
+        """Extract URLs from entertainment section"""
         try:
             self.driver.get(url)
-            logging.info("Navigated to the target URL")
-
-            # Wait for initial content
-            WebDriverWait(self.driver, wait_time).until(
-                lambda driver: self.find_meta_element() is not None
-            )
-
-            # Click until we reach the target page
-            current_page = self.get_current_page_no()
-            while current_page < target_page:
-                if not self.click_load_more():
-                    logging.error(
-                        f"Failed to reach target page. Stopped at page {current_page}"
-                    )
-                    break
-                current_page = self.get_current_page_no()
-
-            # Extract URLs for all loaded content
             urls = []
 
-            # Use WebDriverWait to ensure articles are loaded
-            article_links = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located(
-                    (By.CSS_SELECTOR, "a.sa_text_title._NLOG_IMPRESSION")
-                )
+            # Wait for content to load
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#newsWrp ul"))
+            )
+            time.sleep(2)
+
+            # Get articles using the exact querySelector path
+            article_links = self.driver.find_elements(
+                By.CSS_SELECTOR, "#newsWrp > ul > li > div > a"
             )
 
-            # Get URLs from all visible articles
             for link in article_links:
-                try:
-                    href = link.get_attribute("href")
-                    if href and "news.naver.com/mnews/article" in href:
-                        urls.append(href)
-                except:
-                    continue
+                href = link.get_attribute("href")
+                if href:
+                    urls.append(href)
 
-            unique_urls = list(dict.fromkeys(urls))
-            logging.info(
-                f"Successfully extracted {len(unique_urls)} unique article URLs"
+            logging.info(f"Found {len(urls)} entertainment URLs")
+            return list(dict.fromkeys(urls))
+        except Exception as e:
+            logging.error(f"Error in entertainment extraction: {str(e)}")
+            return []
+
+    def extract_urls_sports(self, url: str) -> List[str]:
+        """Extract URLs from sports section"""
+        try:
+            self.driver.get(url)
+            urls = []
+
+            # Wait for content to load
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.news_list"))
+            )
+            time.sleep(2)
+
+            # Get articles
+            article_links = self.driver.find_elements(
+                By.CSS_SELECTOR, "div.news_list a.title"
             )
 
-            return unique_urls
+            for link in article_links:
+                href = link.get_attribute("href")
+                if href:
+                    urls.append(href)
 
+            return list(dict.fromkeys(urls))
         except Exception as e:
-            logging.error(f"Error extracting URLs: {str(e)}")
+            logging.error(f"Error in sports extraction: {str(e)}")
             return []
+
+    def extract_urls(self, url: str, count_clicks: int = 3) -> List[str]:
+        """Main method to extract URLs based on URL pattern"""
+        url_type = self.detect_url_type(url)
+        logging.info(f"Detected URL type: {url_type}")
+
+        if url_type == "news":
+            return self.extract_urls_news(url, count_clicks)
+        elif url_type == "entertainment":
+            return self.extract_urls_entertainment(url)
+        elif url_type == "sports":
+            return self.extract_urls_sports(url)
+        else:
+            raise ValueError(f"Unsupported URL type: {url_type}")
 
     def __del__(self):
         """Clean up WebDriver when done"""
