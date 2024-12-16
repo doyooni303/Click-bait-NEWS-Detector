@@ -1,0 +1,7 @@
+fastapi[standard]
+uvicorn
+nltk
+selenium
+beautifulsoup4
+gluonnlp
+pydantic
